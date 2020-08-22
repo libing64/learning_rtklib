@@ -90,7 +90,7 @@ https://linuxconfig.org/how-to-install-ftp-client-for-ubuntu-18-04-bionic-beaver
 
 
 
-# 3. 根据广播星历计算位置位置
+# 3. 根据广播星历计算卫星位置
 代码参考 satpos_example.cpp
 
 # 4. 单点定位
@@ -99,14 +99,21 @@ https://linuxconfig.org/how-to-install-ftp-client-for-ubuntu-18-04-bionic-beaver
 代码参考spp_example.cpp
 
 # 5. 差分定位
+TODO
 代码参考 dpp_example.cpp
 
 # 6. rtk定位
+定位精度可以达到mm, 不过只能计算相对位置, 需要额外的基站(base station)，而且基站和接收机(rover station)之间需要通信链路.
+rtk定位的重点在于两次差分, 第一次差分是站间差分(base station 和 rover station), 能够消除卫星钟差, 电离层误差、对流层误差等，第二次差分是星间差分, 能够消除接收机钟差. 公式推导参考 Basics of the GPS Technique.
+
 代码参考rtk_example.cpp
 
 # 7. PPP精密单点定位
-代码参考 ppp_example.cpp
+## 7.1 根据精密轨道参数估计卫星位置
+代码参考ppp_satpos_example.cpp
 
+## 7.2 PPP精密定位
+代码参考 ppp_example.cpp
 
 # 8. 编译&运行
 ## 8.1 rtklib 编译&安装
