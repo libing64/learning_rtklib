@@ -118,6 +118,15 @@ rtk定位的重点在于两次差分, 第一次差分是站间差分(base statio
 代码参考rtk_example.cpp
 
 # 7. PPP精密单点定位
+精密星历文件下载 ftp://cddis.gsfc.nasa.gov/pub/gps/products/2119
+* igr 快速星历(IGS rapid ephemeris)
+* igu 超快速星历(IGS ultra rapid ephemeris)
+* igf 事后精密星历(IGS final precise ephemeris)
+其中IGF轨道精度最高，优于3cm
+IGR轨道精度次之, 优于4cm
+IGU实测部分精度优于5cm, 预报部分精度较低，约为10cm
+
+
 ## 7.1 根据精密轨道参数估计卫星位置
 代码参考ppp_satpos_example.cpp
 

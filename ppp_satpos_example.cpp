@@ -43,11 +43,11 @@ static void dumpclk(pclk_t *pclk, int n)
 /* peph2pos() */
 int main(int argc, char**argv)
 {
-    char *file1 = "../data/sp3/igs1590*.sp3"; /* 2010/7/1 */
-    char *file2 = "../data/sp3/igs1590*.clk"; /* 2010/7/1 */
+    char file1[] = "../data/sp3/igr2119*.sp3"; /* 2020/8/16 */
+    char file2[] = "../data/sp3/igr2119*.clk"; /* 2020/8/16 */
     nav_t nav = {0};
     int stat, sat;
-    double ep[] = {2010, 7, 1, 0, 0, 0};
+    double ep[] = {2020, 8, 16, 0, 0, 0};
     double rs[6] = {0}, dts[2] = {0};
     double var;
     gtime_t t, time;

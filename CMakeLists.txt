@@ -25,3 +25,7 @@ add_executable(ppp_satpos_example ppp_satpos_example.cpp)
 target_link_libraries(ppp_satpos_example librtklib.a)
 
 
+add_executable(ppp_example ppp_example.cpp)
+target_link_libraries(ppp_example librtklib.a)
+
+
