@@ -62,19 +62,18 @@ int main(int argc, char **argv)
     gtime_t t0 = {0}, ts = {0}, te = {0};
     char file1[] = "../data/07590920.05o";
     char file2[] = "../data/07590920.05n";
-    int ret;
+
     obs_t obs = {0};
     nav_t nav = {0};
     sta_t sta = {""};
 
     cout << "readin rinex file: " << file2 << endl;
     cout << "================================" << endl;
-    ret = readrnxt(file2, 1, ts, te, 0.0, "", &obs, &nav, &sta);
+    readrnxt(file2, 1, ts, te, 0.0, "", &obs, &nav, &sta);
 
     dumpnav(&nav);
 
-    ret = readrnxt(file1, 1, t0, t0, 0.0, "", &obs, &nav, &sta);
-    printf("\n\nret=%d\n", ret);
+    readrnxt(file1, 1, t0, t0, 0.0, "", &obs, &nav, &sta);
     dumpobs(&obs);
     dumpsta(&sta);
 
