@@ -43,44 +43,39 @@ static void dumpclk(pclk_t *pclk, int n)
 /* satpos estimation*/
 int main(int argc, char**argv)
 {
-    char *file1 = "../data/sp3/igs1590*.sp3"; /* 2010/7/1 */
-    char *file2 = "../data/sp3/igs1590*.clk"; /* 2010/7/1 */
-    char *file3 = "../../data/igs05.atx";
-    char *file4 = "../data/rinex/brdc*.10n";
-    pcvs_t pcvs = {0};
-    pcv_t *pcv;
+    char file[] = "../data/rinex/daej229a0*.20n";//2020.08.16
     nav_t nav = {0};
-    int i, stat, sat, svh;
-    double ep[] = {2010, 7, 1, 0, 0, 0};
-    double rs1[6] = {0}, dts1[2] = {0}, rs2[6] = {0}, dts2[2] = {0};
+    double ep[] = {2020, 8, 16, 0, 0, 0};
+    double rs[6] = {0}, dts[2] = {0};
     double var;
     gtime_t t, time;
+    int svh = 0;
 
     time = epoch2time(ep);
+    readrnx(file, 1, "", NULL, &nav, NULL);
 
-    readsp3(file1, &nav, 0);
-    readrnxc(file2, &nav);
-    stat = readpcv(file3, &pcvs);
-    readrnx(file4, 1, "", NULL, &nav, NULL);
+    traceopen("satpos.trace");
+    tracelevel(3);
 
-    for (i = 0; i < MAXSAT; i++)
-    {
-        if (!(pcv = searchpcv(i + 1, "", time, &pcvs)))
-            continue;
-        nav.pcvs[i] = *pcv;
-    }
-
-    sat = 3;
-
-    for (i = 0; i < 86400 * 2; i += 30)
+    for (int i = 0; i < 86400 * 2; i += 30)
     {
         t = timeadd(time, (double)i);
-        satpos(t, t, sat, EPHOPT_BRDC, &nav, rs1, dts1, &var, &svh);
-        satpos(t, t, sat, EPHOPT_PREC, &nav, rs2, dts2, &var, &svh);
-        printf("%02d %6d %14.3f %14.3f %14.3f %14.3f %14.3f %14.3f %14.3f %14.3f\n",
-                sat, i,
-                rs1[0], rs1[1], rs1[2], dts1[0] * 1E9, rs2[0], rs2[1], rs2[2], dts2[0] * 1E9);
+        double epoch[6] = {0};
+        time2epoch(t, epoch);
+        printf("%lf,%lf,%lf,%lf,%lf,%lf\n", epoch[0], epoch[1], epoch[2], epoch[3], epoch[4], epoch[5]);
+
+        for (int sat = 0; sat < MAXPRNGPS; sat++)
+        {
+            int ret = satpos(t, t, sat, EPHOPT_BRDC, &nav, rs, dts, &var, &svh);
+            if (ret)//1:OK; 0:error
+            {
+                printf("%02d %6d %14.3f %14.3f %14.3f %14.3f\n",
+                       sat, i, rs[0], rs[1], rs[2], dts[0] * 1E9);
+            }
+        }
+
     }
+    traceclose();
     return 0;
 }
 
