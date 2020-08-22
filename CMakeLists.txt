@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 3.1)
+project(rtklib_example)
+
+
+# include_directories(/usr/local/include/rtklib)
+
+find_package(Eigen3)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+
+add_executable(renix_example renix_example.cpp)
+target_link_libraries(renix_example librtklib.a)
+
+add_executable(satpos_example satpos_example.cpp)
+target_link_libraries(satpos_example librtklib.a)
+
+add_executable(spp_example spp_example.cpp)
+target_link_libraries(spp_example librtklib.a)
+
+add_executable(rtk_example rtk_example.cpp)
+target_link_libraries(rtk_example librtklib.a)
+
+
+
