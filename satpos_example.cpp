@@ -57,7 +57,7 @@ int main(int argc, char**argv)
     traceopen("satpos.trace");
     tracelevel(3);
 
-    for (int i = 0; i < 86400 * 2; i += 30)
+    for (int i = 0; i < 3600; i += 30)
     {
         t = timeadd(time, (double)i);
         double epoch[6] = {0};

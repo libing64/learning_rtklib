@@ -8,8 +8,8 @@ find_package(Eigen3)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 
-add_executable(renix_example renix_example.cpp)
-target_link_libraries(renix_example librtklib.a)
+add_executable(rinex_example rinex_example.cpp)
+target_link_libraries(rinex_example librtklib.a)
 
 add_executable(satpos_example satpos_example.cpp)
 target_link_libraries(satpos_example librtklib.a)

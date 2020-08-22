@@ -1,5 +1,5 @@
 # RTKLIB学习
-* renix文件解析
+* rinex文件解析
 * 根据广播星历估计卫星位置
 * 单点定位
 * 差分GPS定位
@@ -7,7 +7,7 @@
 * PPP定位
 
 
-# 2. renix文件解析
+# 2. rinex文件解析
 
 ## 2.1 Rinex 格式
 Rinex文件一ASCII码的方式存储, 主要分为4类，
@@ -73,20 +73,22 @@ observation type 观测类型
 * 8G 6G21G29G30G31G 3G24G16 : 8代表有8个观测，后面是每个卫星的ID，前缀G代表GPS(G 3,代表G03？ 不带补0的？)
 下面每行就是每个卫星的观测数据
 
-## 2.4 renix文件下载
+## 2.4 rinex文件下载
 下载地址 
 * ftp://nfs.kasi.re.kr/gps/data/daily
 * ftp://cddis.gsfc.nasa.gov/highrate/2020/188
 * ftp://www.igs.org/pub/
 
-访问FTP数据需要通过ftp客户端, 比如nautilus
-nautilus中输入ftp地址 例如 ftp://nfs.kasi.re.kr/gps/data/daily/2020/001
+访问FTP数据需要通过ftp客户端, 比如nautilus或者FileZilla
+
+ftp客户端中输入ftp地址 例如 ftp://nfs.kasi.re.kr/gps/data/daily/2020/001
+可以直接从中获取rinex文件
 
 其它FPT客户端也都可以
 https://linuxconfig.org/how-to-install-ftp-client-for-ubuntu-18-04-bionic-beaver-linux
 
-## 2.5 renix文件解析
-代码参考 renix_example.cpp
+## 2.5 rinex文件解析
+代码参考 rinex_example.cpp
 
 
 
@@ -147,17 +149,16 @@ cd RTKLIB/src
 cmake_minimum_required(VERSION 3.1)
 project(rtklib)
 
+add_definitions(-DTRACE)#enable trace in rtklib
+
 set(RTKLIB_SRC convkml.c convrnx.c datum.c download.c ephemeris.c geoid.c ionex.c lambda.c options.c pntpos.c postpos.c ppp_ar.c ppp.c preceph.c qzslex.c rcvraw.c rinex.c rtcm2.c rtcm3.c rtcm3e.c rtcm.c rtkcmn.c rtkpos.c rtksvr.c sbas.c solution.c stream.c streamsvr.c tle.c)
-add_library(rtklib_static STATIC ${RTKLIB_SRC})
+add_library(rtklib STATIC ${RTKLIB_SRC})
 
-set_target_properties(rtklib_static PROPERTIES OUTPUT_NAME "rtklib")
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-
-install(TARGETS rtklib_static
+install(TARGETS rtklib
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 
-install(FILES rtklib.h DESTINATION include/rtklib)
+install(FILES rtklib.h DESTINATION include)
 ```
 
 ```
@@ -168,6 +169,18 @@ make
 sudo make install
 ```
 此时rtklib已经作为静态库被安装在系统目录下， 基于rtklib二次开发也不用带源码了，直接引用静态库即可.
+注意-DTRACE的做用是打开trace开关, 遇到问题调试起来会快不少. 
+添加如下几行代码， 就可以使能trace功能
+```
+traceopen("rtklib.trace");
+tracelevel(5);
+//////////////////////////////
+////////code//////////////
+//////////////////////////////
+traceclose();
+```
+你的目录下会多一个rtklib.trace的文件, 记录了代码执行的关键路径.
+
 
 ## 8.2 示例代码 编译&运行
 ```
@@ -176,8 +189,11 @@ mkdir build
 cd build
 cmake ..
 make
+./rinex_example
+./satpos_example
 ./spp_example
 ./rtk_example
+./ppp_satpos_example
 ./ppp_example
 ```
 
