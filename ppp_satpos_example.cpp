@@ -1,78 +1,71 @@
-/*--------------------------
-precise ephemeris parser
-*---------------------------*/
 #include <stdio.h>
 #include <assert.h>
 #include <rtklib.h>
 #include <iostream>
 using namespace std;
 
-static void dumpeph(peph_t *peph, int n)
+
+static int nextobsf(const obs_t *obs, int *i, int rcv)
 {
-    char s[64];
-    int i, j;
-    for (i = 0; i < n; i++)
+    double tt;
+    int n;
+
+    for (; *i < obs->n; (*i)++)
+        if (obs->data[*i].rcv == rcv)
+            break;
+    for (n = 0; *i + n < obs->n; n++)
     {
-        time2str(peph[i].time, s, 3);
-        printf("time=%s\n", s);
-        for (j = 0; j < MAXSAT; j++)
-        {
-            printf("%03d: %14.3f %14.3f %14.3f : %5.3f %5.3f %5.3f\n",
-                   j + 1, peph[i].pos[j][0], peph[i].pos[j][1], peph[i].pos[j][2],
-                   peph[i].std[j][0], peph[i].std[j][1], peph[i].std[j][2]);
-        }
+        tt = timediff(obs->data[*i + n].time, obs->data[*i].time);
+        if (obs->data[*i + n].rcv != rcv || tt > DTTOL)
+            break;
     }
-}
-static void dumpclk(pclk_t *pclk, int n)
-{
-    char s[64];
-    int i, j;
-    for (i = 0; i < n; i++)
-    {
-        time2str(pclk[i].time, s, 3);
-        printf("time=%s\n", s);
-        for (j = 0; j < MAXSAT; j++)
-        {
-            printf("%03d: %14.3f : %5.3f\n",
-                   j + 1, pclk[i].clk[j][0] * 1E9, pclk[i].std[j][0] * 1E9);
-        }
-    }
+    return n;
 }
 
-
-/* peph2pos() */
-int main(int argc, char**argv)
+int main(int argc, char **argv)
 {
-    char file1[] = "../data/sp3/igr2119*.sp3"; /* 2020/8/16 */
-    char file2[] = "../data/sp3/igr2119*.clk"; /* 2020/8/16 */
+    gtime_t t0 = {0}, ts = {0}, te = {0};
+    char file1[] = "../data/sp3/igr2119*.sp3";     /* 2020/8/16 */
+    char file2[] = "../data/sp3/igr2119*.clk";     /* 2020/8/16 */
+    char file3[] = "../data/rinex/daej229a00.20n"; /*2020.08.16*/
+    char file4[] = "../data/rinex/daej229a00.20o"; /*2020.08.16*/
+
+    int ret;
+    obs_t obs = {0};
     nav_t nav = {0};
-    int stat, sat;
-    double ep[] = {2020, 8, 16, 0, 0, 0};
-    double rs[6] = {0}, dts[2] = {0};
-    double var;
-    gtime_t t, time;
+    sta_t sta = {""};
 
-    time = epoch2time(ep);
-
+    cout << "readin rinex file: " << file2 << endl;
+    cout << "================================" << endl;
     readsp3(file1, &nav, 0);
-    dumpeph(nav.peph, nav.ne);
-
     readrnxc(file2, &nav);
-    dumpclk(nav.pclk, nav.nc);
 
-    sat = 4;
-    for (int i = 0; i < 86400 * 2; i += 30)
+    //1 -> rover
+    ret = readrnxt(file3, 1, ts, te, 0.0, "", &obs, &nav, &sta);
+    ret = readrnxt(file4, 1, t0, t0, 0.0, "", &obs, &nav, &sta);
+
+    int m = 0;
+    int rcv = 1;
+    double rs1[6] = {0}, dts1[2] = {0}, rs2[6] = {0}, dts2[2] = {0};
+    double var;
+    int svh;
+    for (int i = 0; (m = nextobsf(&obs, &i, rcv)) > 0; i += m)
     {
-        t = timeadd(time, (double)i);
-        for (int j = 0; j < 6; j++)
-            rs[j] = 0.0;
-        for (int j = 0; j < 2; j++)
-            dts[j] = 0.0;
-        peph2pos(t, sat, &nav, 0, rs, dts, &var);
-        printf("%02d %6d %14.3f %14.3f %14.3f %14.3f %10.3f %10.3f %10.3f %10.3f\n",
-                sat, i, rs[0], rs[1], rs[2], dts[0] * 1E9, rs[3], rs[4], rs[5], dts[1] * 1E9);
+        gtime_t t = obs.data[i].time;
+        double ep[6] = {0};
+        time2epoch(t, ep);
+        printf("%lf,%lf,%lf,%lf,%lf,%lf\n", ep[0], ep[1], ep[2], ep[3], ep[4], ep[5]);
+        for (int sat = 0; sat < 30; sat++)
+        {
+            int ret1 = satpos(t, t, sat, EPHOPT_BRDC, &nav, rs1, dts1, &var, &svh);
+            int ret2 = satpos(t, t, sat, EPHOPT_PREC, &nav, rs2, dts2, &var, &svh);
+            if (ret1 && ret2)
+            {
+                printf("%02d %6d %14.3f %14.3f %14.3f %14.3f %14.3f %14.3f %14.3f %14.3f\n",
+                       sat, i,
+                       rs1[0], rs1[1], rs1[2], dts1[0] * 1E9, rs2[0], rs2[1], rs2[2], dts2[0] * 1E9);
+            }
+        }
     }
-
     return 0;
 }
-

@@ -118,19 +118,13 @@ void pntpos_process(obs_t *obs, nav_t *nav, prcopt_t *opt)
 
     for (int i = 0; (m = nextobsf(obs, &i, rcv)) > 0; i += m)
     {
-        //printf("m: %d\n", m);
         int ret = pntpos(&obs->data[i], m, nav, opt, &sol, NULL, NULL, msg);
         if (ret == 1)//1：OK, 0: error
         {
             double ep[6] = {0};
             time2epoch(sol.time, ep);
-            printf("%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,\n", ep[0], ep[1], ep[2], ep[3], ep[4], ep[5],
+            printf("%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,%.0lf,%lf,%lf,%lf,%lf,%lf,%lf,\n", ep[0], ep[1], ep[2], ep[3], ep[4], ep[5],
                    sol.rr[0], sol.rr[1], sol.rr[2], sol.rr[3], sol.rr[4], sol.rr[5]);
-            // printf("%d/%d, pos: %lf,%lf,%lf\n", i, obs->n, sol.rr[0], sol.rr[1], sol.rr[2]);
-            // printf("sat: %d, rcv: %d\n", obs->data[i].sat, obs->data[i].rcv);
-            // printf("qr: %lf,%lf,%lf,%lf,%lf,%lf\n", sol.qr[0], sol.qr[1], sol.qr[2], sol.qr[3], sol.qr[4], sol.qr[5]);
-            // printf("solution status: %u, valid sat: %d\n", sol.stat, sol.ns);
-            // printf("solution type: %hhu,\n", sol.type);
         }
         else
         {
@@ -142,10 +136,8 @@ void pntpos_process(obs_t *obs, nav_t *nav, prcopt_t *opt)
 int main(int argc, char **argv)
 {
     gtime_t t0 = {0}, ts = {0}, te = {0};
-    // char file1[] = "../data/bahr1620.04n";
-    // char file2[] = "../data/bahr1620.04o";
-    char file1[1024] = "../data/bahr1620.04n";
-    char file2[1024] = "../data/bahr1620.04o";
+    char file1[1024] = "../data/rinex/daej229a00.20n";
+    char file2[1024] = "../data/rinex/daej229a00.20o";
 
     if (argc == 3)
     {
@@ -153,14 +145,12 @@ int main(int argc, char **argv)
         strcpy(file2, argv[2]);
     }
 
-    int ret;
     obs_t obs = {0};
     nav_t nav = {0};
     sta_t sta = {""};
 
-    ret = readrnxt(file1, 1, ts, te, 0.0, "", &obs, &nav, &sta);
-    ret = readrnxt(file2, 1, t0, t0, 0.0, "", &obs, &nav, &sta);
-    printf("\n\nret=%d\n", ret);
+    readrnxt(file1, 1, ts, te, 0.0, "", &obs, &nav, &sta);
+    readrnxt(file2, 1, t0, t0, 0.0, "", &obs, &nav, &sta);
 
     traceopen("spp.trace");
     tracelevel(4);

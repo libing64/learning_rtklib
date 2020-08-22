@@ -98,13 +98,9 @@ int main(int argc, char **argv)
     //1 -> rover 
     ret = readrnxt(file2, 1, t0, t0, 0.0, "", &obs, &nav, &sta);
 
-
-    cout << "LINE: " << __LINE__ << endl;
     //2 -> base station
     ret = readrnxt(file3, 2, t0, t0, 0.0, "", &obs, &nav, &sta);
     sortobs(&obs);
-
-    dumpobs(&obs);
 
     printf("station pos: %lf,%lf,%lf\n", sta.pos[0], sta.pos[1], sta.pos[2]);
     prcopt_t prcopt = prcopt_default;
@@ -148,33 +144,26 @@ int main(int argc, char **argv)
 
         rtk.sol.time = obs.data[i].time;
         int stat = rtkpos(&rtk, &obs.data[i], m, &nav);
-        cout << "stat: " << stat << endl;
         sol_t *sol = &rtk.sol;
 
         if (stat == SOLQ_FIX)//fix solution
         {    
             printf("(%d,%d)/%d, type: %d, pos: %lf,%lf,%lf\n", i, m, obs.n, sol->type, sol->rr[0] - rtk.rb[0], sol->rr[1] - rtk.rb[1], sol->rr[2] - rtk.rb[2]);
-            printf("qr: %lf,%lf,%lf,%lf,%lf,%lf\n", sol->qr[0], sol->qr[1], sol->qr[2], sol->qr[3], sol->qr[4], sol->qr[5]);
-            printf("solution status: %u, valid sat: %d\n", sol->stat, sol->ns);
+            //printf("qr: %lf,%lf,%lf,%lf,%lf,%lf\n", sol->qr[0], sol->qr[1], sol->qr[2], sol->qr[3], sol->qr[4], sol->qr[5]);
+            //printf("solution status: %u, valid sat: %d\n", sol->stat, sol->ns);
+            // unsigned char buff[4096];
+            // double rb[3];
 
-            unsigned char buff[4096];
-            double rb[3];
+            // outprcopts(buff, &prcopt);
+            // printf("opt: %s\n", buff);
 
-            outprcopts(buff, &prcopt);
-            printf("opt: %s\n", buff);
+            // outsolheads(buff, &solopt);
+            // printf("sol head: %s\n", buff);
 
-
-
-            outsolheads(buff, &solopt);
-            printf("sol head: %s\n", buff);
-
-
-            outsols(buff, sol, rb, &solopt);
-            printf("sols: %s\n", buff);
-            printf("rb: %lf, %lf, %lf\n", rb[0], rb[1], rb[2]);
-            printf("msg: %s\n\n", rtk.errbuf);
-
- 
+            // outsols(buff, sol, rb, &solopt);
+            // printf("sols: %s\n", buff);
+            // printf("rb: %lf, %lf, %lf\n", rb[0], rb[1], rb[2]);
+            // printf("msg: %s\n\n", rtk.errbuf);
         }
         else
         {
