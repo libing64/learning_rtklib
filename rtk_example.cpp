@@ -67,6 +67,19 @@ static int nextobsf(const obs_t *obs, int *i)
     return n;
 }
 
+static int get_sat_cnt(const obs_t *obs, int i, int m, int rcv)
+{
+    int cnt = 0;
+    for (int k = i; k < (i + m); k++)
+    {
+        if (obs->data[k].rcv == rcv)
+        {
+            cnt++;
+        }
+    }
+    return cnt;
+}
+
 int main(int argc, char **argv)
 {
     gtime_t t0 = {0}, ts = {0}, te = {0};
@@ -125,12 +138,20 @@ int main(int argc, char **argv)
     int rcv = 1;
     for (int i = 0; (m = nextobsf(&obs, &i)) > 0; i += m)
     {
+        int rover_station_cnt = get_sat_cnt(&obs, i, m, 1);
+        int base_station_cnt = get_sat_cnt(&obs, i, m, 2);
+        //printf("i: %d, m: %d, base_sat_cnt : %d, rover_sat_cnt: %d\n", i, m, base_station_cnt, rover_station_cnt);
+        if (base_station_cnt == 0 || rover_station_cnt == 0)
+        {
+            continue;
+        }
+
         rtk.sol.time = obs.data[i].time;
         int stat = rtkpos(&rtk, &obs.data[i], m, &nav);
         cout << "stat: " << stat << endl;
         sol_t *sol = &rtk.sol;
 
-        if (stat == 1)
+        if (stat == SOLQ_FIX)//fix solution
         {    
             printf("(%d,%d)/%d, type: %d, pos: %lf,%lf,%lf\n", i, m, obs.n, sol->type, sol->rr[0] - rtk.rb[0], sol->rr[1] - rtk.rb[1], sol->rr[2] - rtk.rb[2]);
             printf("qr: %lf,%lf,%lf,%lf,%lf,%lf\n", sol->qr[0], sol->qr[1], sol->qr[2], sol->qr[3], sol->qr[4], sol->qr[5]);

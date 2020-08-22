@@ -120,7 +120,7 @@ void pntpos_process(obs_t *obs, nav_t *nav, prcopt_t *opt)
     {
         //printf("m: %d\n", m);
         int ret = pntpos(&obs->data[i], m, nav, opt, &sol, NULL, NULL, msg);
-        if (ret == 1)
+        if (ret == 1)//1：OK, 0: error
         {
             double ep[6] = {0};
             time2epoch(sol.time, ep);

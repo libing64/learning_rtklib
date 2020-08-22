@@ -97,6 +97,15 @@ https://linuxconfig.org/how-to-install-ftp-client-for-ubuntu-18-04-bionic-beaver
 已知N个卫星的位置和卫星到接收机的伪距，求解接收机的位置和钟差，求解方法比较简单，标准的最小二乘或者优化方法都可以解，公式推导参考Basics of the GPS Technique, 不过最麻烦的是各种误差补偿，比如电离层误差、对流层误差等.
 
 代码参考spp_example.cpp
+注意调用之前要给lambda赋值(波长)，这个问题当时我查了一天.
+```
+for (int i = 0; i < NSATGPS; i++)
+{
+    nav->lam[i][0] = CLIGHT / FREQ1;
+    nav->lam[i][1] = CLIGHT / FREQ2;
+    nav->lam[i][2] = CLIGHT / FREQ5;
+}
+```
 
 # 5. 差分定位
 TODO
@@ -163,11 +172,172 @@ make
 ./ppp_example
 ```
 
+# 9 rtklib 常用函数
+
+## 9.1 整周模糊度计算
+```
+/* integer ambiguity resolution ----------------------------------------------*/
+int lambda(int n, int m, const double *a, const double *Q, double *F, double *s);
+```                    
+
+## 9.2 单点定位
+```
+/* standard positioning ------------------------------------------------------*/
+int pntpos(const obsd_t *obs, int n, const nav_t *nav,
+                    const prcopt_t *opt, sol_t *sol, double *azel,
+                    ssat_t *ssat, char *msg);
+```
+
+## 9.3 rtk定位
+```
+/* precise positioning -------------------------------------------------------*/
+void rtkinit(rtk_t *rtk, const prcopt_t *opt);
+void rtkfree(rtk_t *rtk);
+int rtkpos(rtk_t *rtk, const obsd_t *obs, int nobs, const nav_t *nav);
+int rtkopenstat(const char *file, int level);
+void rtkclosestat(void);
+```
+
+## 9.4 PPP精度定位
+```
+/* precise point positioning -------------------------------------------------*/
+void pppos(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav);
+int pppamb(rtk_t *rtk, const obsd_t *obs, int n, const nav_t *nav,
+                    const double *azel);
+int pppnx(const prcopt_t *opt);
+void pppoutsolstat(rtk_t *rtk, int level, FILE *fp);
+void windupcorr(gtime_t time, const double *rs, const double *rr,
+                        double *phw);
+```
+## 9.5 数据后处理
+```
+/* post-processing positioning -----------------------------------------------*/
+int postpos(gtime_t ts, gtime_t te, double ti, double tu,
+                    const prcopt_t *popt, const solopt_t *sopt,
+                    const filopt_t *fopt, char **infile, int n, char *outfile,
+                    const char *rov, const char *base);
+```
+
+# 10 rtklib 宏定义
+
+## solution status
+```
+#define SOLQ_NONE 0   /* solution status: no solution */
+#define SOLQ_FIX 1    /* solution status: fix */
+#define SOLQ_FLOAT 2  /* solution status: float */
+#define SOLQ_SBAS 3   /* solution status: SBAS */
+#define SOLQ_DGPS 4   /* solution status: DGPS/DGNSS */
+#define SOLQ_SINGLE 5 /* solution status: single */
+#define SOLQ_PPP 6    /* solution status: PPP */
+#define SOLQ_DR 7     /* solution status: dead reconing */
+#define MAXSOLQ 7     /* max number of solution status */
+```
+
+## solution type
+```
+#define SOLF_LLH 0  /* solution format: lat/lon/height */
+#define SOLF_XYZ 1  /* solution format: x/y/z-ecef */
+#define SOLF_ENU 2  /* solution format: e/n/u-baseline */
+#define SOLF_NMEA 3 /* solution format: NMEA-183 */
+#define SOLF_GSIF 4 /* solution format: GSI-F1/2/3 */
+```
 
 
+## positioning mode
+```
+#define PMODE_SINGLE 0     /* positioning mode: single */
+#define PMODE_DGPS 1       /* positioning mode: DGPS/DGNSS */
+#define PMODE_KINEMA 2     /* positioning mode: kinematic */
+#define PMODE_STATIC 3     /* positioning mode: static */
+#define PMODE_MOVEB 4      /* positioning mode: moving-base */
+#define PMODE_FIXED 5      /* positioning mode: fixed */
+#define PMODE_PPP_KINEMA 6 /* positioning mode: PPP-kinemaric */
+#define PMODE_PPP_STATIC 7 /* positioning mode: PPP-static */
+#define PMODE_PPP_FIXED 8  /* positioning mode: PPP-fixed */
+```
+PMODE_KINEMA 和 PMODE_FIXED怎么理解？
 
 
+## time system
+```
+#define TIMES_GPST 0 /* time system: gps time */
+#define TIMES_UTC 1  /* time system: utc */
+#define TIMES_JST 2  /* time system: jst */
+```
+## ionosphere option 电离层改正参数
+```
+#define IONOOPT_OFF 0  /* ionosphere option: correction off */
+#define IONOOPT_BRDC 1 /* ionosphere option: broadcast model */
+#define IONOOPT_SBAS 2 /* ionosphere option: SBAS model */
+#define IONOOPT_IFLC 3 /* ionosphere option: L1/L2 or L1/L5 iono-free LC */
+#define IONOOPT_EST 4  /* ionosphere option: estimation */
+#define IONOOPT_TEC 5  /* ionosphere option: IONEX TEC model */
+#define IONOOPT_QZS 6  /* ionosphere option: QZSS broadcast model */
+#define IONOOPT_LEX 7  /* ionosphere option: QZSS LEX ionospehre */
+#define IONOOPT_STEC 8 /* ionosphere option: SLANT TEC model */
+```
 
 
+## troposphere option: 对流层改正参数
+#define TROPOPT_OFF 0  /* troposphere option: correction off */
+#define TROPOPT_SAAS 1 /* troposphere option: Saastamoinen model */
+#define TROPOPT_SBAS 2 /* troposphere option: SBAS model */
+#define TROPOPT_EST 3  /* troposphere option: ZTD estimation */
+#define TROPOPT_ESTG 4 /* troposphere option: ZTD+grad estimation */
+#define TROPOPT_COR 5  /* troposphere option: ZTD correction */
+#define TROPOPT_CORG 6 /* troposphere option: ZTD+grad correction */
+
+## ephemeris option 星历选项
+```
+#define EPHOPT_BRDC 0   /* ephemeris option: broadcast ephemeris */
+#define EPHOPT_PREC 1   /* ephemeris option: precise ephemeris */
+#define EPHOPT_SBAS 2   /* ephemeris option: broadcast + SBAS */
+#define EPHOPT_SSRAPC 3 /* ephemeris option: broadcast + SSR_APC */
+#define EPHOPT_SSRCOM 4 /* ephemeris option: broadcast + SSR_COM */
+#define EPHOPT_LEX 5    /* ephemeris option: QZSS LEX ephemeris */
+```
+
+## AR mode
+```
+#define ARMODE_OFF 0       /* AR mode: off */
+#define ARMODE_CONT 1      /* AR mode: continuous */
+#define ARMODE_INST 2      /* AR mode: instantaneous */
+#define ARMODE_FIXHOLD 3   /* AR mode: fix and hold */
+#define ARMODE_PPPAR 4     /* AR mode: PPP-AR */
+#define ARMODE_PPPAR_ILS 5 /* AR mode: PPP-AR ILS */
+#define ARMODE_WLNL 6      /* AR mode: wide lane/narrow lane */
+#define ARMODE_TCAR 7      /* AR mode: triple carrier ar */
+```
+
+## SBAS option:
+```
+#define SBSOPT_LCORR 1 /* SBAS option: long term correction */
+#define SBSOPT_FCORR 2 /* SBAS option: fast correction */
+#define SBSOPT_ICORR 4 /* SBAS option: ionosphere correction */
+#define SBSOPT_RANGE 8 /* SBAS option: ranging */
+```
+
+## stream type:
+```
+#define STR_NONE 0     /* stream type: none */
+#define STR_SERIAL 1   /* stream type: serial */
+#define STR_FILE 2     /* stream type: file */
+#define STR_TCPSVR 3   /* stream type: TCP server */
+#define STR_TCPCLI 4   /* stream type: TCP client */
+#define STR_UDP 5      /* stream type: UDP stream */
+#define STR_NTRIPSVR 6 /* stream type: NTRIP server */
+#define STR_NTRIPCLI 7 /* stream type: NTRIP client */
+#define STR_FTP 8      /* stream type: ftp */
+#define STR_HTTP 9     /* stream type: http */
+```
 
 
+## LLI
+
+```
+#define LLI_SLIP 0x01   /* LLI: cycle-slip */
+#define LLI_HALFC 0x02  /* LLI: half-cycle not resovled */
+#define LLI_BOCTRK 0x04 /* LLI: boc tracking of mboc signal */
+#define LLI_HALFA 0x40  /* LLI: half-cycle added */
+#define LLI_HALFS 0x80  /* LLI: half-cycle subtracted */
+```
